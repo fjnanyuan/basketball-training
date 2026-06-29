@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <title>加速运球训练记录</title>
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --panel: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --success: #16a34a;
+      --success-soft: #dcfce7;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --shadow: 0 8px 24px rgba(17, 24, 39, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button, input { font: inherit; }
+
+    .app {
+      width: min(760px, 100%);
+      margin: 0 auto;
+      padding: 18px 14px 48px;
+    }
+
+    .hero {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 18px;
+      border-radius: 20px;
+      color: white;
+      background: linear-gradient(135deg, #111827, #1e3a8a);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(24px, 6vw, 34px);
+      line-height: 1.15;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: rgba(255,255,255,.78);
+      font-size: 14px;
+    }
+
+    .session-time {
+      margin-top: 8px;
+      color: rgba(255,255,255,.68);
+      font-size: 12px;
+    }
+
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+      font-weight: 700;
+    }
+
+    .progress-track {
+      height: 12px;
+      margin-top: 9px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,.18);
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #22c55e, #86efac);
+      transition: width .35s cubic-bezier(.2,.8,.2,1);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .summary-card {
+      padding: 13px 8px;
+      text-align: center;
+      border-radius: 16px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .summary-card strong {
+      display: block;
+      font-size: 22px;
+    }
+
+    .summary-card span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .tip {
+      margin: 12px 0 14px;
+      padding: 13px 15px;
+      border-radius: 14px;
+      background: #eff6ff;
+      color: #1e3a8a;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .groups {
+      display: grid;
+      gap: 12px;
+    }
+
+    .group-card {
+      position: relative;
+      padding: 16px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      transition: transform .2s ease, border-color .3s ease, background .3s ease;
+    }
+
+    .group-card.completed {
+      border-color: #22c55e;
+      background: linear-gradient(145deg, #ffffff, var(--success-soft));
+      transform: scale(.995);
+    }
+
+    .group-card.completed::after {
+      content: "✓";
+      position: absolute;
+      right: 12px;
+      top: 4px;
+      color: rgba(22,163,74,.14);
+      font-size: 84px;
+      font-weight: 900;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .group-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 13px;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .group-title-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .group-number {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: white;
+      background: #111827;
+      font-size: 15px;
+    }
+
+    .completed .group-number { background: var(--success); }
+
+    .status {
+      position: relative;
+      z-index: 1;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .completed .status { color: var(--success); }
+
+    .hand-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .hand-box {
+      position: relative;
+      z-index: 1;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.9);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      height: 48px;
+      padding: 0 12px;
+      border: 2px solid var(--line);
+      border-radius: 11px;
+      outline: none;
+      color: var(--text);
+      background: white;
+      font-size: 21px;
+      font-weight: 800;
+      text-align: center;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+
+    input[type="number"]::placeholder {
+      color: #c2c7d0;
+      font-weight: 600;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+    }
+
+    .completed input[type="number"] {
+      border-color: #86efac;
+      background: #f0fdf4;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .action-btn {
+      min-height: 48px;
+      border-radius: 13px;
+      padding: 11px 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .new-btn {
+      border: 0;
+      color: white;
+      background: var(--primary);
+      box-shadow: 0 7px 16px rgba(37,99,235,.2);
+    }
+
+    .reset-btn {
+      border: 1px solid #fecaca;
+      color: var(--danger);
+      background: white;
+    }
+
+    .history-section {
+      margin-top: 28px;
+    }
+
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .clear-history {
+      border: 0;
+      padding: 8px 4px;
+      color: var(--danger);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .history-empty {
+      padding: 24px 16px;
+      border-radius: 16px;
+      color: var(--muted);
+      background: white;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .history-card {
+      padding: 15px;
+      border-radius: 17px;
+      background: white;
+      box-shadow: var(--shadow);
+    }
+
+    .history-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .history-date {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .history-sub {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .delete-history {
+      border: 0;
+      color: var(--danger);
+      background: transparent;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .history-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .history-stat {
+      padding: 9px 6px;
+      border-radius: 11px;
+      background: #f8fafc;
+      text-align: center;
+    }
+
+    .history-stat strong {
+      display: block;
+      font-size: 17px;
+    }
+
+    .history-stat span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    details {
+      margin-top: 11px;
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }
+
+    summary {
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .detail-item {
+      padding: 7px 5px;
+      border-radius: 9px;
+      background: #f8fafc;
+      color: #374151;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      z-index: 100;
+      min-width: 210px;
+      max-width: calc(100vw - 30px);
+      padding: 13px 18px;
+      border-radius: 999px;
+      color: white;
+      background: rgba(17,24,39,.95);
+      text-align: center;
+      font-weight: 750;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translate(-50%, 24px);
+      pointer-events: none;
+      transition: opacity .25s, transform .25s;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .finish-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      background: rgba(17,24,39,.72);
+      backdrop-filter: blur(7px);
+    }
+
+    .finish-overlay.show { display: grid; }
+
+    .finish-box {
+      width: min(430px, 100%);
+      padding: 28px 22px;
+      border-radius: 24px;
+      background: white;
+      text-align: center;
+      animation: pop .38s cubic-bezier(.2,.9,.3,1.25);
+    }
+
+    .finish-icon { font-size: 70px; }
+    .finish-box h2 { margin: 5px 0 8px; font-size: 28px; }
+    .finish-box p { color: var(--muted); line-height: 1.6; }
+
+    .finish-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-top: 16px;
+    }
+
+    .finish-btn {
+      min-height: 49px;
+      border-radius: 13px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .finish-close {
+      border: 1px solid var(--line);
+      color: var(--text);
+      background: white;
+    }
+
+    .finish-new {
+      border: 0;
+      color: white;
+      background: var(--success);
+    }
+
+    .confetti {
+      position: fixed;
+      z-index: 210;
+      top: -20px;
+      width: 10px;
+      height: 18px;
+      border-radius: 2px;
+      animation: fall 1.8s linear forwards;
+      pointer-events: none;
+    }
+
+    @keyframes pop {
+      from { transform: scale(.72); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes fall {
+      to {
+        transform: translate3d(var(--drift), 110vh, 0) rotate(780deg);
+        opacity: .9;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .app { padding-inline: 10px; }
+      .hero { border-radius: 17px; padding: 16px; }
+      .group-card { padding: 14px; }
+      .summary-card strong { font-size: 19px; }
+      .detail-grid { grid-template-columns: repeat(2, 1fr); }
+      .actions, .finish-actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <section class="hero">
+      <h1>加速运球训练</h1>
+      <p class="subtitle">15组 · 每组左右手各一次 · 输入两项后自动完成</p>
+      <div class="session-time" id="sessionTime"></div>
+
+      <div class="progress-row">
+        <span>本次训练进度</span>
+        <span id="progressText">0 / 15</span>
+      </div>
+      <div class="progress-track" aria-label="训练进度">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </section>
+
+    <section class="summary" aria-label="本次训练统计">
+      <div class="summary-card">
+        <strong id="doneCount">0</strong>
+        <span>已完成组数</span>
+      </div>
+      <div class="summary-card">
+        <strong id="leftTotal">0</strong>
+        <span>左手掉球</span>
+      </div>
+      <div class="summary-card">
+        <strong id="rightTotal">0</strong>
+        <span>右手掉球</span>
+      </div>
+    </section>
+
+    <div class="tip">
+      每组完成左手和右手后，分别输入掉球次数。两项都有数字时，该组会自动变绿；15组全部完成后，本次训练会自动保存到下方历史记录。
+    </div>
+
+    <section class="groups" id="groups"></section>
+
+    <div class="actions">
+      <button class="action-btn new-btn" id="newSessionBtn" type="button">开始下一次训练</button>
+      <button class="action-btn reset-btn" id="clearCurrentBtn" type="button">清空本次输入</button>
+    </div>
+
+    <section class="history-section">
+      <div class="section-heading">
+        <h2>历史训练记录</h2>
+        <button class="clear-history" id="clearHistoryBtn" type="button">清空历史</button>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <div class="finish-overlay" id="finishOverlay">
+    <div class="finish-box">
+      <div class="finish-icon">🏀</div>
+      <h2>15组全部完成！</h2>
+      <p id="finishSummary"></p>
+      <div class="finish-actions">
+        <button class="finish-btn finish-close" id="closeFinish" type="button">查看当前记录</button>
+        <button class="finish-btn finish-new" id="finishNew" type="button">开始下一次训练</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GROUP_COUNT = 15;
+    const DRAFT_KEY = "speedDribbleDraft_v2";
+    const HISTORY_KEY = "speedDribbleHistory_v2";
+
+    const groupsEl = document.getElementById("groups");
+    const historyListEl = document.getElementById("historyList");
+    const toastEl = document.getElementById("toast");
+    const finishOverlay = document.getElementById("finishOverlay");
+
+    let draft = loadDraft();
+    let history = loadHistory();
+    let finishShownForSession = false;
+
+    function makeSessionId() {
+      return "session-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+    }
+
+    function newDraft() {
+      return {
+        sessionId: makeSessionId(),
+        startedAt: new Date().toISOString(),
+        groups: Array.from({ length: GROUP_COUNT }, (_, i) => ({
+          id: i + 1,
+          leftDrops: "",
+          rightDrops: ""
+        }))
+      };
+    }
+
+    function normalizeDraft(value) {
+      if (!value || !Array.isArray(value.groups)) return newDraft();
+
+      const normalized = {
+        sessionId: value.sessionId || makeSessionId(),
+        startedAt: value.startedAt || new Date().toISOString(),
+        groups: Array.from({ length: GROUP_COUNT }, (_, i) => {
+          const old = value.groups[i] || {};
+          return {
+            id: i + 1,
+            leftDrops: normalizeInputValue(old.leftDrops),
+            rightDrops: normalizeInputValue(old.rightDrops)
+          };
+        })
+      };
+
+      return normalized;
+    }
+
+    function normalizeInputValue(value) {
+      if (value === "" || value === null || typeof value === "undefined") return "";
+      const number = Number.parseInt(value, 10);
+      return Number.isFinite(number) && number >= 0 ? String(number) : "";
+    }
+
+    function loadDraft() {
+      try {
+        return normalizeDraft(JSON.parse(localStorage.getItem(DRAFT_KEY)));
+      } catch (error) {
+        return newDraft();
+      }
+    }
+
+    function loadHistory() {
+      try {
+        const value = JSON.parse(localStorage.getItem(HISTORY_KEY));
+        return Array.isArray(value) ? value : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveDraft() {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    }
+
+    function saveHistory() {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    }
+
+    function isFilled(value) {
+      return value !== "" && Number.isFinite(Number(value)) && Number(value) >= 0;
+    }
+
+    function groupCompleted(group) {
+      return isFilled(group.leftDrops) && isFilled(group.rightDrops);
+    }
+
+    function allCompleted() {
+      return draft.groups.every(groupCompleted);
+    }
+
+    function numericValue(value) {
+      return isFilled(value) ? Number(value) : 0;
+    }
+
+    function totals(groups = draft.groups) {
+      return groups.reduce((result, group) => {
+        result.left += numericValue(group.leftDrops);
+        result.right += numericValue(group.rightDrops);
+        return result;
+      }, { left: 0, right: 0 });
+    }
+
+    function render() {
+      renderSessionTime();
+      renderGroups();
+      updateSummary();
+      renderHistory();
+    }
+
+    function renderSessionTime() {
+      const date = new Date(draft.startedAt);
+      document.getElementById("sessionTime").textContent =
+        "本次开始：" + formatDateTime(date);
+    }
+
+    function renderGroups() {
+      groupsEl.innerHTML = "";
+
+      draft.groups.forEach((item, index) => {
+        const completed = groupCompleted(item);
+        const card = document.createElement("article");
+        card.className = "group-card" + (completed ? " completed" : "");
+
+        card.innerHTML = `
+          <div class="group-title">
+            <div class="group-title-left">
+              <span class="group-number">${index + 1}</span>
+              <span>第 ${index + 1} 组</span>
+            </div>
+            <span class="status">${completed ? "✓ 自动完成" : "待输入"}</span>
+          </div>
+
+          <div class="hand-grid">
+            <div class="hand-box">
+              <label for="left-${index}">左手掉球次数</label>
+              <input
+                id="left-${index}"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                step="1"
+                placeholder="输入数字"
+                value="${escapeHtml(item.leftDrops)}"
+              />
+            </div>
+
+            <div class="hand-box">
+              <label for="right-${index}">右手掉球次数</label>
+              <input
+                id="right-${index}"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                step="1"
+                placeholder="输入数字"
+                value="${escapeHtml(item.rightDrops)}"
+              />
+            </div>
+          </div>
+        `;
+
+        const leftInput = card.querySelector(`#left-${index}`);
+        const rightInput = card.querySelector(`#right-${index}`);
+
+        leftInput.addEventListener("input", () => {
+          item.leftDrops = cleanLiveValue(leftInput.value);
+          afterInput(index, card);
+        });
+
+        rightInput.addEventListener("input", () => {
+          item.rightDrops = cleanLiveValue(rightInput.value);
+          afterInput(index, card);
+        });
+
+        groupsEl.appendChild(card);
+      });
+    }
+
+    function cleanLiveValue(value) {
+      if (value === "") return "";
+      const number = Number.parseInt(value, 10);
+      if (!Number.isFinite(number) || number < 0) return "";
+      return String(number);
+    }
+
+    function afterInput(index, card) {
+      const wasAllCompleted = allCompleted();
+
+      saveDraft();
+      updateCardStatus(index, card);
+      updateSummary();
+
+      const nowAllCompleted = allCompleted();
+
+      if (nowAllCompleted) {
+        upsertCurrentSessionToHistory();
+        renderHistory();
+
+        if (!wasAllCompleted && !finishShownForSession) {
+          finishShownForSession = true;
+          vibrate();
+          setTimeout(showFinish, 260);
+        }
+      } else {
+        removeCurrentSessionFromHistory();
+        finishShownForSession = false;
+        renderHistory();
+      }
+    }
+
+    function updateCardStatus(index, card) {
+      const completed = groupCompleted(draft.groups[index]);
+      card.classList.toggle("completed", completed);
+      card.querySelector(".status").textContent =
+        completed ? "✓ 自动完成" : "待输入";
+    }
+
+    function updateSummary() {
+      const completed = draft.groups.filter(groupCompleted).length;
+      const sum = totals();
+
+      document.getElementById("doneCount").textContent = completed;
+      document.getElementById("leftTotal").textContent = sum.left;
+      document.getElementById("rightTotal").textContent = sum.right;
+      document.getElementById("progressText").textContent =
+        `${completed} / ${GROUP_COUNT}`;
+      document.getElementById("progressBar").style.width =
+        `${(completed / GROUP_COUNT) * 100}%`;
+    }
+
+    function upsertCurrentSessionToHistory() {
+      if (!allCompleted()) return;
+
+      const sum = totals();
+      const record = {
+        sessionId: draft.sessionId,
+        startedAt: draft.startedAt,
+        completedAt: new Date().toISOString(),
+        leftTotal: sum.left,
+        rightTotal: sum.right,
+        groups: draft.groups.map(group => ({
+          id: group.id,
+          leftDrops: Number(group.leftDrops),
+          rightDrops: Number(group.rightDrops)
+        }))
+      };
+
+      const existingIndex = history.findIndex(
+        item => item.sessionId === draft.sessionId
+      );
+
+      if (existingIndex >= 0) {
+        history[existingIndex] = record;
+      } else {
+        history.unshift(record);
+      }
+
+      saveHistory();
+    }
+
+    function removeCurrentSessionFromHistory() {
+      const next = history.filter(item => item.sessionId !== draft.sessionId);
+      if (next.length !== history.length) {
+        history = next;
+        saveHistory();
+      }
+    }
+
+    function renderHistory() {
+      historyListEl.innerHTML = "";
+
+      if (history.length === 0) {
+        historyListEl.innerHTML =
+          '<div class="history-empty">还没有完成过15组训练。</div>';
+        return;
+      }
+
+      history.forEach(record => {
+        const card = document.createElement("article");
+        card.className = "history-card";
+        const total = Number(record.leftTotal || 0) + Number(record.rightTotal || 0);
+
+        const details = (record.groups || []).map(group => `
+          <div class="detail-item">
+            第${group.id}组<br>
+            左 ${group.leftDrops}｜右 ${group.rightDrops}
+          </div>
+        `).join("");
+
+        card.innerHTML = `
+          <div class="history-top">
+            <div>
+              <div class="history-date">${formatDateTime(new Date(record.completedAt))}</div>
+              <div class="history-sub">完成15组加速运球训练</div>
+            </div>
+            <button class="delete-history" type="button">删除</button>
+          </div>
+
+          <div class="history-stats">
+            <div class="history-stat">
+              <strong>${record.leftTotal}</strong>
+              <span>左手掉球</span>
+            </div>
+            <div class="history-stat">
+              <strong>${record.rightTotal}</strong>
+              <span>右手掉球</span>
+            </div>
+            <div class="history-stat">
+              <strong>${total}</strong>
+              <span>合计掉球</span>
+            </div>
+          </div>
+
+          <details>
+            <summary>查看每组数据</summary>
+            <div class="detail-grid">${details}</div>
+          </details>
+        `;
+
+        card.querySelector(".delete-history").addEventListener("click", () => {
+          if (!confirm("确定删除这次训练记录吗？")) return;
+          history = history.filter(item => item.sessionId !== record.sessionId);
+          saveHistory();
+          renderHistory();
+          showToast("该次记录已删除");
+        });
+
+        historyListEl.appendChild(card);
+      });
+    }
+
+    function startNewSession(requireConfirmation = true) {
+      const hasAnyInput = draft.groups.some(
+        group => group.leftDrops !== "" || group.rightDrops !== ""
+      );
+
+      if (requireConfirmation && hasAnyInput && !allCompleted()) {
+        if (!confirm("本次训练还没有完成，确定开始下一次并清空当前输入吗？")) {
+          return;
+        }
+      }
+
+      draft = newDraft();
+      finishShownForSession = false;
+      saveDraft();
+      finishOverlay.classList.remove("show");
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      showToast("已开始新的15组训练");
+    }
+
+    function clearCurrent() {
+      const hasAnyInput = draft.groups.some(
+        group => group.leftDrops !== "" || group.rightDrops !== ""
+      );
+
+      if (!hasAnyInput) {
+        showToast("本次还没有输入数据");
+        return;
+      }
+
+      if (!confirm("确定清空本次15组输入吗？历史记录不会被清除。")) return;
+
+      removeCurrentSessionFromHistory();
+      draft.groups.forEach(group => {
+        group.leftDrops = "";
+        group.rightDrops = "";
+      });
+      draft.startedAt = new Date().toISOString();
+      finishShownForSession = false;
+      saveDraft();
+      render();
+      showToast("本次输入已清空");
+    }
+
+    function showFinish() {
+      const sum = totals();
+      document.getElementById("finishSummary").textContent =
+        `已自动保存。本次左手掉球 ${sum.left} 次，右手掉球 ${sum.right} 次，合计 ${sum.left + sum.right} 次。`;
+      finishOverlay.classList.add("show");
+      launchConfetti();
+    }
+
+    function formatDateTime(date) {
+      return new Intl.DateTimeFormat("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }).format(date);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    let toastTimer;
+    function showToast(message) {
+      clearTimeout(toastTimer);
+      toastEl.textContent = message;
+      toastEl.classList.add("show");
+      toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1700);
+    }
+
+    function vibrate() {
+      if ("vibrate" in navigator) navigator.vibrate([45, 35, 70]);
+    }
+
+    function launchConfetti() {
+      const colors = ["#2563eb", "#16a34a", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+      for (let i = 0; i < 70; i++) {
+        const piece = document.createElement("span");
+        piece.className = "confetti";
+        piece.style.left = `${Math.random() * 100}vw`;
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = `${Math.random() * .5}s`;
+        piece.style.animationDuration = `${1.35 + Math.random() * 1.2}s`;
+        piece.style.setProperty("--drift", `${-90 + Math.random() * 180}px`);
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 2900);
+      }
+    }
+
+    document.getElementById("newSessionBtn").addEventListener("click", () => {
+      startNewSession(true);
+    });
+
+    document.getElementById("clearCurrentBtn").addEventListener("click", clearCurrent);
+
+    document.getElementById("clearHistoryBtn").addEventListener("click", () => {
+      if (history.length === 0) {
+        showToast("目前没有历史记录");
+        return;
+      }
+      if (!confirm("确定清空全部历史训练记录吗？此操作无法撤销。")) return;
+      history = [];
+      saveHistory();
+      renderHistory();
+      showToast("历史记录已清空");
+    });
+
+    document.getElementById("closeFinish").addEventListener("click", () => {
+      finishOverlay.classList.remove("show");
+    });
+
+    document.getElementById("finishNew").addEventListener("click", () => {
+      startNewSession(false);
+    });
+
+    render();
+
+    if (allCompleted()) {
+      upsertCurrentSessionToHistory();
+      renderHistory();
+    }
+  </script>
+</body>
+</html>
